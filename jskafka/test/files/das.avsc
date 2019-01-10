@@ -1,0 +1,14 @@
+{
+  "name": "Measurement",
+  "type": "record",
+  "namespace": "com.equinor.dasdata",
+  "fields": [
+    {
+      "name": "amplitudes",
+      "type": {
+        "type": "array",
+        "items": "int"
+      }
+    }
+  ]
+}
