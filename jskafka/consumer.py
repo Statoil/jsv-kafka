@@ -1,44 +1,26 @@
-from kafka import KafkaConsumer, TopicPartition
-from io import BytesIO
-#import avro.schema
-#import avro.io
-from fastavro import reader
+from confluent_kafka import TopicPartition
+from confluent_kafka.avro import AvroConsumer
+import logging.handlers
 
 
 class Consumer:
-    '''
-               .......
+    log = logging.getLogger('das app')
+    log.setLevel(logging.INFO)
+    handler = logging.FileHandler('./consumer.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
 
-               Parameters
-               ----------
-                bootstrap_servers: 'host[:port]' string (or list of 'host[:port]'
-                    strings) that the consumer should contact to bootstrap initial
-                    cluster metadata. This does not have to be the full node list.
-                    It just needs to have at least one broker that will respond to a
-                    Metadata API Request. Default port is 9092. If no servers are
-                    specified, will default to localhost:9092.
-                client_id (str): A name for this client. This string is passed in
-                    each request to servers and can be used to identify specific
-                    server-side log entries that correspond to this client. Also
-                    submitted to GroupCoordinator for logging with respect to
-                    consumer group administration. Default: 'kafka-python-{version}'.
-                topic (str): topic where to get the message from.
-                partition (int): partition where to get the message from.
+    def __init__(self, topic, partition):
 
-       '''
 
-    def __init__(self, client_id, bootstrap_servers, topic, partition):
-        self.consumer = KafkaConsumer(
-            client_id=client_id,
-            bootstrap_servers=bootstrap_servers,
-            enable_auto_commit=True
-        )
+        self.consumer = AvroConsumer({
+            'bootstrap.servers': 'kafkabroker1:9092,kafkabroker2:9092, kafkabroker3:9092',
+            'group.id': 'jsvgroupid',
+            'schema.registry.url': 'http://kafkabroker1:8081'})
 
-        self.topic_partition = TopicPartition(topic, partition)
-        self.consumer.assign([self.topic_partition])
-        #with open("files/das2.avsc", "rb") as f:
-        #    self.schema = avro.schema.Parse(f.read())
-
+        if(topic != None):
+            self.topic_partition = TopicPartition(topic, partition)
 
 
     def __str__(self):
@@ -51,54 +33,77 @@ class Consumer:
     def __repr__(self):
         return self.__str__()
 
+
+    def get_message(self, offset):
+        self.log.info(f'Start : get_message({offset})')
+
+        self.topic_partition.offset = offset
+
+        self.consumer.assign([self.topic_partition])
+
+        message = self.consumer.poll(10)
+
+        self.consumer.close()
+
+        self.log.info(f'End : get_message({offset})')
+
+        return message
+
+
     def seek_from_to(self, start_timestamp, end_timestamp):
+        self.log.info(f'Start : seek_from_to({start_timestamp}, {end_timestamp})')
 
         start_offset = self.get_offset(self.topic_partition, start_timestamp)
         end_offset = self.get_offset(self.topic_partition, end_timestamp)
 
-        self.consumer.seek(self.topic_partition, start_offset)
+        self.topic_partition.offset = start_offset
+
+        self.consumer.assign([self.topic_partition])
 
         messages = []
-        for message in self.consumer:
+
+        while True:
+            message = self.consumer.poll(10)
             messages.append(message)
-            if (message.offset >= end_offset):
+            if (message.offset() >= end_offset):
+                self.log.info(f'End : seek_from_to({start_timestamp}, {end_timestamp})')
                 return messages
 
     def get_closest_message(self, timestamp):
+        self.log.info(f'Start : get_closest_message({timestamp})')
 
         offset = self.get_offset(self.topic_partition, timestamp)
-        self.consumer.seek(self.topic_partition, offset)
+        self.topic_partition.offset = offset
 
-        for message in self.consumer:
-            return message
+        self.consumer.assign([self.topic_partition])
 
-    def get_message(self, offset):
+        message = self.consumer.poll(10)
 
-
-        self.consumer.seek(self.topic_partition, offset)
-
-        for message in self.consumer:
-            #bytes_reader = BytesIO(message.value)
-            #decoder = avro.io.BinaryDecoder(bytes_reader)
-            #reader = avro.io.DatumReader(self.schema)
-            try:
-
-                #return reader.read(decoder)
-                return self.fromAvro(message.value)
-            except Exception as e:
-                print(e)
-
-    def get_topics(self):
-        return self.consumer.topics()
+        self.log.info(f'End : get_closest_message({timestamp})')
+        return message
 
     def get_offset(self, topic_partition, timestamp):
 
-        offsets = self.consumer.offsets_for_times({topic_partition: timestamp})
-        off = offsets.get(topic_partition)
-        return off.offset
+        topic_partition.offset = timestamp
+        offsets = self.consumer.offsets_for_times([topic_partition])
+        return offsets[0].offset
 
-    def fromAvro(self, data):
-        stream = BytesIO(data)
-        avro_reader = reader(stream)
-        for record in avro_reader:
-            return record
+    def get_offsets(self, topic_partition, timestamps):
+
+        i = 0
+        topic_partitions = []
+        for timestamp in timestamps:
+
+            tp  = TopicPartition(topic_partition.topic, topic_partition.partition)
+            tp.offset = timestamp
+            topic_partitions.append(tp)
+
+        offsets = self.consumer.offsets_for_times(topic_partitions)
+        return offsets
+
+    def get_topics(self):
+        self.log.info(f'Start : get_topics()')
+        topics = self.consumer.list_topics().topics
+        self.log.info(f'Start : get_topics()')
+        return topics
+
