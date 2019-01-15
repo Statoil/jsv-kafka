@@ -19,7 +19,7 @@ class TestConsumer(TestCase):
 
         consumer = Consumer(topic, partition)
 
-        message = consumer.get_message(150)
+        message = consumer.get_message(10)
         self.assertIsNotNone(message.value())
 
         dx = datetime.datetime.now()
@@ -32,24 +32,45 @@ class TestConsumer(TestCase):
         print(f'timestamp: {message.timestamp()}')
         ##print(message.value())
 
-    def test_seek_from_to(self):
+    def test_seek_from_to_timestamps(self):
         topic = 'GraneSM2_f15'
         partition = 1
 
-        start_ts = 1547173195118
-        slutt_ts = 1547173295118
+        start_ts = 1547173125118
+        slutt_ts = 1547173214118
 
         dy = datetime.datetime.now()
         consumer = Consumer(topic, partition)
 
-        messages = consumer.seek_from_to(start_ts, slutt_ts)
+        messages = consumer.seek_from_to_timestamps(start_ts, slutt_ts)
 
         dx = datetime.datetime.now()
         print(f'Time used {dx - dy}')
 
-        self.assertTrue(messages.__len__() > 0)
-        self.assertEqual(messages[0].offset(), 50)
-        self.assertEqual(messages[-1].offset(), 150)
+        self.assertEqual(messages.__len__(),  60)
+        self.assertEqual(messages[0].offset(), 10)
+        self.assertEqual(messages[-1].offset(), 69)
+
+
+    def test_seek_from_to_offsets(self):
+        topic = 'GraneSM2_f15'
+        partition = 1
+
+        start_offset = 10
+        slutt_offset = 69
+
+        dy = datetime.datetime.now()
+        consumer = Consumer(topic, partition)
+
+        messages = consumer.seek_from_to_offsets(start_offset, slutt_offset)
+
+        dx = datetime.datetime.now()
+        print(f'Time used {dx - dy}')
+
+        self.assertEqual(messages.__len__(),  60)
+        self.assertEqual(messages[0].offset(), 10)
+        self.assertEqual(messages[-1].offset(), 69)
+
 
     def test_get_closest_message(self):
         topic = 'GraneSM2_f15'

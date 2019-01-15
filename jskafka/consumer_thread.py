@@ -1,0 +1,173 @@
+from confluent_kafka import TopicPartition
+from confluent_kafka.avro import AvroConsumer
+import logging.handlers
+import concurrent.futures
+
+
+class ConsumerThread:
+    log = logging.getLogger('Kafka ConsumerThread')
+    log.setLevel(logging.INFO)
+    handler = logging.FileHandler('./consumerThread.log')
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+
+    bootstrap_servers = 'kafkabroker1:9092,kafkabroker2:9092, kafkabroker3:9092'
+    group_id = 'jsvgroupid'
+    schema_registry_url = 'http://kafkabroker1:8081'
+
+    def __init__(self, topic):
+
+        self.topic = topic
+
+    def __str__(self):
+        sb = []
+        for key in self.__dict__:
+            sb.append("{key}='{value}'".format(key=key, value=self.__dict__[key]))
+
+        return ', '.join(sb)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def get_message(self, partitions, offset):
+        self.log.info(f'Start : get_message({partitions}, {offset})')
+
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=partitions.__sizeof__()) as executor:
+
+            futures = {executor.submit(self.__get_message, p, offset): p for p in partitions}
+            for future in concurrent.futures.as_completed(futures):
+                partition = futures[future]
+                try:
+                    data = future.result()
+                except Exception as exc:
+                    self.log.info(
+                        f'Topic: {self.topic}, Partition: {partition}, Offset: {offset} generated an exception: {exc}')
+                else:
+                    results[partition] = data
+
+        self.log.info(f'End : get_message({partitions}, {offset})')
+
+        return results
+
+    def seek_from_to_timestamps(self, partitions, start_timestamp, end_timestamp):
+        self.log.info(f'Start : seek_from_to_timestamps({partitions}, {start_timestamp}, {end_timestamp})')
+
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=partitions.__sizeof__()) as executor:
+
+            futures = {executor.submit(self.__seek_from_to_timestamps, p, start_timestamp, end_timestamp): p for p in partitions}
+            for future in concurrent.futures.as_completed(futures):
+                partition = futures[future]
+                try:
+                    data = future.result()
+                except Exception as exc:
+                    self.log.info(
+                        f'Topic: {self.topic}, Partition: {partition}, StartTime: {start_timestamp}, EndTime: {end_timestamp} generated an exception: {exc}')
+                else:
+                    results[partition] = data
+
+        self.log.info(f'End : seek_from_to_timestamps({partitions}, {start_timestamp}, {end_timestamp})')
+
+        return results
+
+    def seek_from_to_offsets(self, partitions, start_offset, end_offset):
+        self.log.info(f'Start : seek_from_to_offsets({partitions}, {start_offset}, {end_offset})')
+
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=partitions.__sizeof__()) as executor:
+
+            futures = {executor.submit(self.__seek_from_to_offsets, p, start_offset, end_offset): p for p in partitions}
+            for future in concurrent.futures.as_completed(futures):
+                partition = futures[future]
+                try:
+                    data = future.result()
+                except Exception as exc:
+                    self.log.info(
+                        f'Topic: {self.topic}, Partition: {partition}, StartTime: {start_offset}, EndTime: {end_offset} generated an exception: {exc}')
+                else:
+                    results[partition] = data
+
+        self.log.info(f'End : seek_from_to_offsets({partitions}, {start_offset}, {end_offset})')
+
+        return results
+
+    def __get_message(self, partition, offset):
+        self.log.info(f'Start : __get_message({partition},{offset})')
+
+        consumer = AvroConsumer({
+            'bootstrap.servers': self.bootstrap_servers,
+            'group.id': self.group_id,
+            'schema.registry.url': self.schema_registry_url})
+
+        topic_partition = TopicPartition(self.topic, partition)
+        topic_partition.offset = offset
+        consumer.assign([topic_partition])
+
+        message = consumer.poll(10)
+
+        consumer.close()
+
+        self.log.info(f'End : __get_message({partition},{offset})')
+
+        return message
+
+    def __seek_from_to_timestamps(self, partition, start_timestamp, end_timestamp):
+        self.log.info(f'Start : __seek_from_to_timestamps({partition}, {start_timestamp}, {end_timestamp})')
+
+        consumer = AvroConsumer({
+            'bootstrap.servers': self.bootstrap_servers,
+            'group.id': self.group_id,
+            'schema.registry.url': self.schema_registry_url})
+
+        topic_partition = TopicPartition(self.topic, partition)
+        start_offset = self.get_offset(consumer, topic_partition, start_timestamp)
+        end_offset = self.get_offset(consumer, topic_partition, end_timestamp)
+
+        return self.__seek_from_to_offsets(partition, start_offset, end_offset)
+
+    def __seek_from_to_offsets(self, partition, start_offset, end_offset):
+        self.log.info(f'Start : __seek_from_to_offsets({partition}, {start_offset}, {end_offset})')
+
+        consumer = AvroConsumer({
+            'bootstrap.servers': self.bootstrap_servers,
+            'group.id': self.group_id,
+            'schema.registry.url': self.schema_registry_url})
+
+        topic_partition = TopicPartition(self.topic, partition)
+        topic_partition.offset = start_offset
+        consumer.assign([topic_partition])
+
+        messages = []
+
+        while True:
+            message = consumer.poll(10)
+            messages.append(message)
+            if (message.offset() >= end_offset):
+                self.log.info(f'End : __seek_from_to_offsets({partition}, {start_offset}, {end_offset})')
+                return messages
+
+    def get_offset(self, consumer, topic_partition, timestamp):
+
+        topic_partition.offset = timestamp
+        offsets = consumer.offsets_for_times([topic_partition])
+        return offsets[0].offset
+
+    def get_offsets(self, topic_partition, timestamps):
+
+        i = 0
+        topic_partitions = []
+        for timestamp in timestamps:
+            tp = TopicPartition(topic_partition.topic, topic_partition.partition)
+            tp.offset = timestamp
+            topic_partitions.append(tp)
+
+        offsets = self.consumer.offsets_for_times(topic_partitions)
+        return offsets
+
+    def get_topics(self):
+        self.log.info(f'Start : get_topics()')
+        topics = self.consumer.list_topics().topics
+        self.log.info(f'Start : get_topics()')
+        return topics

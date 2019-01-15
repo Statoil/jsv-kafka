@@ -4,7 +4,7 @@ import logging.handlers
 
 
 class Consumer:
-    log = logging.getLogger('das app')
+    log = logging.getLogger('Kafka Consumer')
     log.setLevel(logging.INFO)
     handler = logging.FileHandler('./consumer.log')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -50,11 +50,16 @@ class Consumer:
         return message
 
 
-    def seek_from_to(self, start_timestamp, end_timestamp):
-        self.log.info(f'Start : seek_from_to({start_timestamp}, {end_timestamp})')
+    def seek_from_to_timestamps(self, start_timestamp, end_timestamp):
+        self.log.info(f'Start : seek_from_to_timestamps({start_timestamp}, {end_timestamp})')
 
         start_offset = self.get_offset(self.topic_partition, start_timestamp)
         end_offset = self.get_offset(self.topic_partition, end_timestamp)
+
+        return self.seek_from_to_offsets(start_offset, end_offset)
+
+    def seek_from_to_offsets(self, start_offset, end_offset):
+        self.log.info(f'Start : seek_from_to({start_offset}, {end_offset})')
 
         self.topic_partition.offset = start_offset
 
@@ -66,7 +71,7 @@ class Consumer:
             message = self.consumer.poll(10)
             messages.append(message)
             if (message.offset() >= end_offset):
-                self.log.info(f'End : seek_from_to({start_timestamp}, {end_timestamp})')
+                self.log.info(f'End : seek_from_to({start_offset}, {end_offset})')
                 return messages
 
     def get_closest_message(self, timestamp):
