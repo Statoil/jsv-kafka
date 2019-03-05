@@ -2,6 +2,7 @@ from confluent_kafka import TopicPartition
 from confluent_kafka.avro import AvroConsumer
 import logging.handlers
 import concurrent.futures
+from module.das_fft import DasFft
 
 
 class ConsumerThread:
@@ -12,9 +13,9 @@ class ConsumerThread:
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    bootstrap_servers = 'kafkabroker1:9092,kafkabroker2:9092, kafkabroker3:9092'
+    bootstrap_servers = 'kbro01:9092, kbro01:9092, kbro01:9092'
     group_id = 'jsvgroupid'
-    schema_registry_url = 'http://kafkabroker1:8081'
+    schema_registry_url = 'http://ksch01:8081'
 
     def __init__(self, topic):
 
@@ -30,13 +31,13 @@ class ConsumerThread:
     def __repr__(self):
         return self.__str__()
 
-    def get_message(self, partitions, offset):
+    def get_message(self, partitions, offset, fft=False):
         self.log.info(f'Start : get_message({partitions}, {offset})')
 
         results = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=partitions.__sizeof__()) as executor:
 
-            futures = {executor.submit(self.__get_message, p, offset): p for p in partitions}
+            futures = {executor.submit(self.__get_message, p, offset, fft): p for p in partitions}
             for future in concurrent.futures.as_completed(futures):
                 partition = futures[future]
                 try:
@@ -51,13 +52,13 @@ class ConsumerThread:
 
         return results
 
-    def seek_from_to_timestamps(self, partitions, start_timestamp, end_timestamp):
+    def seek_from_to_timestamps(self, partitions, start_timestamp, end_timestamp, fft=False):
         self.log.info(f'Start : seek_from_to_timestamps({partitions}, {start_timestamp}, {end_timestamp})')
 
         results = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=partitions.__sizeof__()) as executor:
 
-            futures = {executor.submit(self.__seek_from_to_timestamps, p, start_timestamp, end_timestamp): p for p in partitions}
+            futures = {executor.submit(self.__seek_from_to_timestamps, p, start_timestamp, end_timestamp, fft): p for p in partitions}
             for future in concurrent.futures.as_completed(futures):
                 partition = futures[future]
                 try:
@@ -72,13 +73,13 @@ class ConsumerThread:
 
         return results
 
-    def seek_from_to_offsets(self, partitions, start_offset, end_offset):
+    def seek_from_to_offsets(self, partitions, start_offset, end_offset, fft=False):
         self.log.info(f'Start : seek_from_to_offsets({partitions}, {start_offset}, {end_offset})')
 
         results = {}
         with concurrent.futures.ThreadPoolExecutor(max_workers=partitions.__sizeof__()) as executor:
 
-            futures = {executor.submit(self.__seek_from_to_offsets, p, start_offset, end_offset): p for p in partitions}
+            futures = {executor.submit(self.__seek_from_to_offsets, p, start_offset, end_offset, fft): p for p in partitions}
             for future in concurrent.futures.as_completed(futures):
                 partition = futures[future]
                 try:
@@ -93,7 +94,7 @@ class ConsumerThread:
 
         return results
 
-    def __get_message(self, partition, offset):
+    def __get_message(self, partition, offset, fft):
         self.log.info(f'Start : __get_message({partition},{offset})')
 
         consumer = AvroConsumer({
@@ -109,11 +110,17 @@ class ConsumerThread:
 
         consumer.close()
 
+        if fft:
+            dasfft = DasFft()
+            message.value()['fft'] = dasfft.amplitudes_fft(message.value()['amplitudes'])
+
+
+
         self.log.info(f'End : __get_message({partition},{offset})')
 
         return message
 
-    def __seek_from_to_timestamps(self, partition, start_timestamp, end_timestamp):
+    def __seek_from_to_timestamps(self, partition, start_timestamp, end_timestamp, fft):
         self.log.info(f'Start : __seek_from_to_timestamps({partition}, {start_timestamp}, {end_timestamp})')
 
         consumer = AvroConsumer({
@@ -125,9 +132,9 @@ class ConsumerThread:
         start_offset = self.get_offset(consumer, topic_partition, start_timestamp)
         end_offset = self.get_offset(consumer, topic_partition, end_timestamp)
 
-        return self.__seek_from_to_offsets(partition, start_offset, end_offset)
+        return self.__seek_from_to_offsets(partition, start_offset, end_offset, fft)
 
-    def __seek_from_to_offsets(self, partition, start_offset, end_offset):
+    def __seek_from_to_offsets(self, partition, start_offset, end_offset, fft):
         self.log.info(f'Start : __seek_from_to_offsets({partition}, {start_offset}, {end_offset})')
 
         consumer = AvroConsumer({
@@ -143,6 +150,10 @@ class ConsumerThread:
 
         while True:
             message = consumer.poll(10)
+            if fft:
+                dasfft = DasFft()
+                message.value()['fft'] = dasfft.amplitudes_fft(message.value()['amplitudes'])
+
             messages.append(message)
             if (message.offset() >= end_offset):
                 self.log.info(f'End : __seek_from_to_offsets({partition}, {start_offset}, {end_offset})')
