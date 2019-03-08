@@ -8,7 +8,7 @@ import logging
 class TestConsumer(TestCase):
     #logging.basicConfig(level=logging.DEBUG)
 
-    topic = 'RandomSM2_t2'
+    topic = 'BHGE02'
 
     def test_get_message(self):
 
@@ -18,7 +18,7 @@ class TestConsumer(TestCase):
 
         consumer = Consumer(self.topic, partition)
 
-        message = consumer.get_message(10)
+        message = consumer.get_message(69)
         self.assertIsNotNone(message.value())
 
         dx = datetime.datetime.now()
@@ -62,8 +62,8 @@ class TestConsumer(TestCase):
     def test_seek_from_to_timestamps(self):
         partition = 1
 
-        start_ts = 1549872018056000  # 5
-        slutt_ts = 1549872083056000  # 69
+        start_ts = 1551953428784  # 5
+        slutt_ts = 1551953522714  # 69
 
         dy = datetime.datetime.now()
         consumer = Consumer(self.topic, partition)
@@ -83,8 +83,8 @@ class TestConsumer(TestCase):
     def test_seek_from_to_timestamps_fft(self):
         partition = 1
 
-        start_ts = 1549872018056000  # 5
-        slutt_ts = 1549872083056000  # 69
+        start_ts = 1551953428784  # 5
+        slutt_ts = 1551953522714  # 69
 
         dy = datetime.datetime.now()
         consumer = Consumer(self.topic, partition)
@@ -150,7 +150,7 @@ class TestConsumer(TestCase):
     def test_get_closest_message(self):
         partition = 1
 
-        ts = 1549872063056000
+        ts = 1551953503714
 
         dy = datetime.datetime.now()
 
@@ -168,7 +168,7 @@ class TestConsumer(TestCase):
     def test_get_closest_message_fft(self):
         partition = 1
 
-        ts = 1549872063056000
+        ts = 1551953503714
 
         dy = datetime.datetime.now()
 
