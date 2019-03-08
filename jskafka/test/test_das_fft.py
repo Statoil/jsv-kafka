@@ -1,4 +1,4 @@
-from module.das_fft import DasFft
+from jskafka.das_fft import DasFft
 import unittest
 import time
 import numpy as np

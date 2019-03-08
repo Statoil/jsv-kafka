@@ -1,7 +1,6 @@
-from confluent_kafka import TopicPartition
 from confluent_kafka.avro import AvroConsumer
 import logging.handlers
-from jskafka.module.das_fft import DasFft
+from jskafka.das_fft import DasFft
 
 
 class ConsumerSubscribe:

@@ -7,7 +7,7 @@ setup(
     author='Lindvar Lagran',
     author_email='llag@equinor.com',
     install_requires=['confluent-kafka','fastavro', 'avro-python3', 'requests'],
-    packages=['jskafka'],
+    packages=['jskafka', 'jskafka.module'],
     test_suite='nose.collector',
     tests_require=['nose'],
 )

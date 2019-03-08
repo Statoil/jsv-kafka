@@ -9,7 +9,7 @@ class TestConsumer(TestCase):
     #logging.basicConfig(level=logging.DEBUG)
 
     #topic = 'RandomSM2_t2'
-    topic = 'Test'
+    topic = 'BHGE02'
     group_id = 'jsv-kafka32'
 
     def test_get_message(self):
