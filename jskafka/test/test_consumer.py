@@ -12,13 +12,13 @@ class TestConsumer(TestCase):
 
     def test_get_message(self):
 
-        partition = 1
+        partition = 100
 
         dy = datetime.datetime.now()
 
         consumer = Consumer(self.topic, partition)
 
-        message = consumer.get_message(69)
+        message = consumer.get_message(296)
         self.assertIsNotNone(message.value())
 
         dx = datetime.datetime.now()

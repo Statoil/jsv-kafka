@@ -11,13 +11,14 @@ class ConsumerSubscribe:
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    def __init__(self, topic, group_id, client_id='pythonClient'):
+    def __init__(self, topic, group_id, client_id='pythonClient', auto_offset_reset='latest'):
 
         self.consumer = AvroConsumer({
             'bootstrap.servers': 'kbro01:9092, kbro01:9092, kbro01:9092',
             'group.id': group_id,
             'client.id': client_id,
-            'schema.registry.url': 'http://ksch01:8081'
+            'schema.registry.url': 'http://ksch01:8081',
+            'auto.offset.reset': auto_offset_reset
         })
 
         self.consumer.subscribe([topic])
@@ -35,7 +36,7 @@ class ConsumerSubscribe:
     def get_message(self, fft=False):
         self.log.info(f'Start : get_messages({fft})')
 
-        message = self.consumer.poll(10)
+        message = self.consumer.poll(100)
 
         if fft:
             dasfft = DasFft()

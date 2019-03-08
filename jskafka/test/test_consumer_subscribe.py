@@ -10,13 +10,14 @@ class TestConsumer(TestCase):
 
     #topic = 'RandomSM2_t2'
     topic = 'BHGE02'
-    group_id = 'jsv-kafka32'
+    group_id = 'Python-Grupe5'
+    auto_offset_reset = 'earliest'
 
     def test_get_message(self):
 
         dy = datetime.datetime.now()
 
-        consumer = ConsumerSubscribe(self.topic, self.group_id)
+        consumer = ConsumerSubscribe(topic=self.topic, group_id=self.group_id, auto_offset_reset=self.auto_offset_reset)
 
         i = 1
         run = True
@@ -29,9 +30,12 @@ class TestConsumer(TestCase):
                     print('*****************************************')
                     print(f'{i} used {datetime.datetime.now() - dy}')
                     print(f'time pr. massage {(datetime.datetime.now() - dy) / i}')
+                    print(message.value())
+                    run = False
 
                 i = i + 1
-            run = False
+
+        consumer.close()
 
 
 
