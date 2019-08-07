@@ -8,17 +8,17 @@ import logging
 class TestConsumer(TestCase):
     #logging.basicConfig(level=logging.DEBUG)
 
-    topic = 'BHGE02'
+    topic = 'Test'
 
     def test_get_message(self):
 
-        partition = 100
+        partition = 0
 
         dy = datetime.datetime.now()
 
         consumer = Consumer(self.topic, partition)
 
-        message = consumer.get_message(296)
+        message = consumer.get_message(3)
         self.assertIsNotNone(message.value())
 
         dx = datetime.datetime.now()
@@ -36,7 +36,7 @@ class TestConsumer(TestCase):
 
     def test_get_message_fft(self):
 
-        partition = 1
+        partition = 0
 
         dy = datetime.datetime.now()
 
@@ -60,42 +60,44 @@ class TestConsumer(TestCase):
         ##print(message.value())
 
     def test_seek_from_to_timestamps(self):
-        partition = 1
+        partition = 0
 
-        start_ts = 1551953428784  # 5
-        slutt_ts = 1551953522714  # 69
+        start_ts = 1563783956345  # 5
+        end_ts = 1563786943094  # 69
 
         dy = datetime.datetime.now()
         consumer = Consumer(self.topic, partition)
 
-        messages = consumer.seek_from_to_timestamps(start_ts, slutt_ts)
+        messages = consumer.seek_from_to_timestamps(start_ts, end_ts)
 
         dx = datetime.datetime.now()
         print(f'Time used {dx - dy}')
 
         self.assertEqual(messages[0].timestamp()[1], start_ts)
-        self.assertEqual(messages[-1].timestamp()[1], slutt_ts)
+        self.assertEqual(messages[-1].timestamp()[1], end_ts)
         self.assertFalse('fft' in messages[0].value())
         self.assertTrue('amplitudes' in messages[0].value())
         self.assertFalse('fft' in messages[-1].value())
         self.assertTrue('amplitudes' in messages[-1].value())
 
     def test_seek_from_to_timestamps_fft(self):
-        partition = 1
+        partition = 0
 
-        start_ts = 1551953428784  # 5
-        slutt_ts = 1551953522714  # 69
+        start_ts = 1563783956345  # 5
+        end_ts = 1563786943094  # 69
+
+        dy = datetime.datetime.now()
 
         dy = datetime.datetime.now()
         consumer = Consumer(self.topic, partition)
 
-        messages = consumer.seek_from_to_timestamps(start_ts, slutt_ts, fft=True)
+        messages = consumer.seek_from_to_timestamps(start_ts, end_ts, fft=True)
 
         dx = datetime.datetime.now()
         print(f'Time used {dx - dy}')
 
         self.assertEqual(messages[0].timestamp()[1], start_ts)
-        self.assertEqual(messages[-1].timestamp()[1], slutt_ts)
+        self.assertEqual(messages[-1].timestamp()[1], end_ts)
         self.assertTrue('fft' in messages[0].value())
         self.assertTrue('amplitudes' in messages[0].value())
         self.assertTrue('fft' in messages[-1].value())
@@ -103,7 +105,7 @@ class TestConsumer(TestCase):
 
     def test_seek_from_to_offsets(self):
 
-        partition = 1
+        partition = 0
 
         start_offset = 10
         slutt_offset = 69
@@ -126,7 +128,7 @@ class TestConsumer(TestCase):
 
     def test_seek_from_to_offsets_fft(self):
 
-        partition = 1
+        partition = 0
 
         start_offset = 10
         slutt_offset = 69
@@ -148,7 +150,7 @@ class TestConsumer(TestCase):
         self.assertTrue('amplitudes' in messages[-1].value())
 
     def test_get_closest_message(self):
-        partition = 1
+        partition = 0
 
         ts = 1551953503714
 
@@ -161,12 +163,12 @@ class TestConsumer(TestCase):
         dx = datetime.datetime.now()
         print(f'Time used {dx - dy}')
 
-        self.assertEqual(message.offset(), 50)
+        self.assertEqual(message.offset(), 0)
         self.assertFalse('fft' in message.value())
         self.assertTrue('amplitudes' in message.value())
 
     def test_get_closest_message_fft(self):
-        partition = 1
+        partition = 0
 
         ts = 1551953503714
 
@@ -179,7 +181,7 @@ class TestConsumer(TestCase):
         dx = datetime.datetime.now()
         print(f'Time used {dx - dy}')
 
-        self.assertEqual(message.offset(), 50)
+        self.assertEqual(message.offset(), 0)
         self.assertTrue('fft' in message.value())
         self.assertTrue('amplitudes' in message.value())
 

@@ -3,6 +3,7 @@ from confluent_kafka.avro import AvroConsumer
 import logging.handlers
 import concurrent.futures
 from jskafka.das_fft import DasFft
+from jskafka.constant import Constant
 
 
 class ConsumerThread:
@@ -13,13 +14,12 @@ class ConsumerThread:
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    bootstrap_servers = 'kbro01:9092, kbro01:9092, kbro01:9092'
-    group_id = 'jsvgroupid'
-    schema_registry_url = 'http://ksch01:8081'
-
-    def __init__(self, topic):
+    def __init__(self, topic, bootstrap_servers=Constant.BOOTSTRAP_SERVERS_TEST, schema_registry_url=Constant.SCHEMA_REGISTRY_URL_TEST, group_id='jsvgroupid'):
 
         self.topic = topic
+        self.bootstrap_servers = Constant.BOOTSTRAP_SERVERS_TEST
+        self.group_id = group_id
+        self.schema_registry_url = Constant.SCHEMA_REGISTRY_URL_TEST
 
     def __str__(self):
         sb = []

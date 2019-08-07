@@ -1,7 +1,7 @@
 from confluent_kafka.avro import AvroConsumer
 import logging.handlers
 from jskafka.das_fft import DasFft
-
+from jskafka.constant import Constant
 
 class ConsumerSubscribe:
     log = logging.getLogger('Kafka ConsumerSubscribe')
@@ -11,13 +11,13 @@ class ConsumerSubscribe:
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    def __init__(self, topic, group_id, client_id='pythonClient', auto_offset_reset='latest'):
+    def __init__(self, topic, bootstrap_servers=Constant.BOOTSTRAP_SERVERS_TEST, schema_registry_url=Constant.SCHEMA_REGISTRY_URL_TEST, group_id='jsvgroupid', client_id='pythonClient', auto_offset_reset='latest'):
 
         self.consumer = AvroConsumer({
-            'bootstrap.servers': 'kbro01:9092, kbro01:9092, kbro01:9092',
+            'bootstrap.servers': bootstrap_servers,
             'group.id': group_id,
             'client.id': client_id,
-            'schema.registry.url': 'http://ksch01:8081',
+            'schema.registry.url': schema_registry_url,
             'auto.offset.reset': auto_offset_reset
         })
 

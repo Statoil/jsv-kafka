@@ -8,9 +8,9 @@ import logging
 class TestConsumer(TestCase):
     #logging.basicConfig(level=logging.DEBUG)
 
-    #topic = 'RandomSM2_t2'
-    topic = 'BHGE02'
-    group_id = 'Python-Grupe5'
+    topic = 'Grane10k1'
+    #topic = 'Test'
+    group_id = 'Python-Group'
     auto_offset_reset = 'earliest'
 
     def test_get_message(self):

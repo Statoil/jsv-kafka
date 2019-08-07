@@ -2,6 +2,7 @@ from confluent_kafka import TopicPartition
 from confluent_kafka.avro import AvroConsumer
 import logging.handlers
 from jskafka.das_fft import DasFft
+from jskafka.constant import Constant
 
 
 class Consumer:
@@ -12,12 +13,12 @@ class Consumer:
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    def __init__(self, topic=None, partition=None):
+    def __init__(self, topic=None, partition=None, bootstrap_servers=Constant.BOOTSTRAP_SERVERS_TEST, schema_registry_url=Constant.SCHEMA_REGISTRY_URL_TEST, group_id='jsvgroupid'):
 
         self.consumer = AvroConsumer({
-            'bootstrap.servers': 'kbro01:9092, kbro01:9092, kbro01:9092',
-            'group.id': 'jsvgroupid',
-            'schema.registry.url': 'http://ksch01:8081',
+            'bootstrap.servers': bootstrap_servers,
+            'group.id': group_id,
+            'schema.registry.url': schema_registry_url,
             # 'socket.keepalive.enable': True,
             # 'socket.receive.buffer.bytes': 800000
         })

@@ -1,6 +1,7 @@
 from confluent_kafka.avro import AvroProducer
 import logging.handlers
 from confluent_kafka import avro
+from jskafka.constant import Constant
 
 
 class Producer:
@@ -37,12 +38,12 @@ class Producer:
     handler.setFormatter(formatter)
     log.addHandler(handler)
 
-    def __init__(self, topic):
+    def __init__(self, topic, bootstrap_servers=Constant.BOOTSTRAP_SERVERS_TEST, schema_registry_url=Constant.SCHEMA_REGISTRY_URL_TEST, client_id='pythonClient'):
 
         self.producer = AvroProducer({
-            'bootstrap.servers': 'kbro01:9092, kbro01:9092, kbro01:9092',
-            'client.id': 'pythonClient',
-            'schema.registry.url': 'http://ksch01:8081'
+            'bootstrap.servers': bootstrap_servers,
+            'client.id': client_id,
+            'schema.registry.url': schema_registry_url
         })
         self.topic = topic
 
@@ -63,7 +64,7 @@ class Producer:
     def send_one(self, value):
         self.log.info(f'Start : send_one()')
 
-        self.producer.produce(topic=self.topic, value=value, value_schema=self.value_schema)
+        self.producer.produce(topic=self.topic, partition=1, value=value, value_schema=self.value_schema)
 
         self.producer.flush()
 

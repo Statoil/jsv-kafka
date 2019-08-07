@@ -6,7 +6,7 @@ import logging
 
 class TestConsumer(TestCase):
     # logging.basicConfig(level=logging.DEBUG)
-    topic = 'RandomSM2_t2'
+    topic = 'Test'
 
     def test_get_message(self):
         partitions = [1, 3, 5]
