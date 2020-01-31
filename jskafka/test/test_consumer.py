@@ -3,12 +3,13 @@ import datetime
 
 from jskafka.consumer import Consumer
 import logging
+from jskafka.constant import Constant
 
 
 class TestConsumer(TestCase):
     #logging.basicConfig(level=logging.DEBUG)
 
-    topic = 'Test'
+    topic = '1234-amp'
 
     def test_get_message(self):
 
@@ -16,7 +17,7 @@ class TestConsumer(TestCase):
 
         dy = datetime.datetime.now()
 
-        consumer = Consumer(self.topic, partition)
+        consumer = Consumer(self.topic, partition, bootstrap_servers=Constant.BOOTSTRAP_SERVERS_DEV, schema_registry_url=Constant.SCHEMA_REGISTRY_URL_DEV)
 
         message = consumer.get_message(3)
         self.assertIsNotNone(message.value())
@@ -25,9 +26,9 @@ class TestConsumer(TestCase):
         print(f'Time used {dx - dy}')
 
         self.assertFalse('fft' in message.value())
-        self.assertTrue('amplitudes' in message.value())
-        self.assertTrue(message.value().get('amplitudes').__len__() > 0)
-        print(message.value().get('amplitudes'))
+        self.assertTrue('amplitudesFloat' in message.value())
+        self.assertTrue(message.value().get('amplitudesFloat').__len__() > 0)
+        print(message.value().get('amplitudesFloat'))
 
         print(f'partition: {message.partition()}')
         print(f'offset: {message.offset()}')
